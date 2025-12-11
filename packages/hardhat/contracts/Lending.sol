@@ -64,7 +64,10 @@ contract Lending is Ownable {
             revert Lending__InvalidAmount();
         }
         s_userCollateral[msg.sender] -= amount;
-        _validatePosition(msg.sender);
+        if(s_userBorrowed[msg.sender] > 0) {
+            _validatePosition(msg.sender);
+        }
+        
         (bool sent, ) = msg.sender.call{value: amount}("");
         if(!sent) {
             revert Lending__TransferFailed();
