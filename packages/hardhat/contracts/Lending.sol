@@ -63,7 +63,7 @@ contract Lending is Ownable {
             revert Lending__InvalidAmount();
         }
         s_userCollateral[msg.sender] -= amount;
-        //_validatePosition(msg.sender);
+        _validatePosition(msg.sender);
         (bool sent, ) = msg.sender.call{value: amount}("");
         if(!sent) {
             revert Lending__TransferFailed();
@@ -76,27 +76,43 @@ contract Lending is Ownable {
      * @param user The address of the user to calculate the collateral value for
      * @return uint256 The collateral value
      */
-    function calculateCollateralValue(address user) public view returns (uint256) {}
+    function calculateCollateralValue(address user) public view returns (uint256) {
+        return (s_userCollateral[user] * i_cornDEX.currentPrice()) / 1e18;
+    }
 
     /**
      * @notice Calculates the position ratio for a user to ensure they are within safe limits
      * @param user The address of the user to calculate the position ratio for
      * @return uint256 The position ratio
      */
-    function _calculatePositionRatio(address user) internal view returns (uint256) {}
+    function _calculatePositionRatio(address user) internal view returns (uint256) {
+        uint256 collateralValue = calculateCollateralValue(user);
+        uint256 borrowedAmount = s_userBorrowed[user];
+        if(borrowedAmount == 0) {
+            return type(uint256).max;
+        }
+        return (collateralValue * 1e18) / borrowedAmount;
+    }
 
     /**
      * @notice Checks if a user's position can be liquidated
      * @param user The address of the user to check
      * @return bool True if the position is liquidatable, false otherwise
      */
-    function isLiquidatable(address user) public view returns (bool) {}
+    function isLiquidatable(address user) public view returns (bool) {
+        uint256 positionRatio = _calculatePositionRatio(user);
+        return (positionRatio * 100) < (COLLATERAL_RATIO * 1e18);
+    }
 
     /**
      * @notice Internal view method that reverts if a user's position is unsafe
      * @param user The address of the user to validate
      */
-    function _validatePosition(address user) internal view {}
+    function _validatePosition(address user) internal view {
+        if(isLiquidatable(user)) {
+            revert Lending__UnsafePositionRatio();
+        }
+    }
 
     /**
      * @notice Allows users to borrow corn based on their collateral
