@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     Corn: {
-      address: "0x0B306BF915C4d645ff596e518fAf3F9669b97016",
+      address: "0xE6E340D132b5f46d1e472DebcD681B2aBc16e57E",
       abi: [
         {
           inputs: [],
@@ -445,10 +445,10 @@ const deployedContracts = {
         renounceOwnership: "@openzeppelin/contracts/access/Ownable.sol",
         transferOwnership: "@openzeppelin/contracts/access/Ownable.sol",
       },
-      deployedOnBlock: 21,
+      deployedOnBlock: 40,
     },
     CornDEX: {
-      address: "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1",
+      address: "0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690",
       abi: [
         {
           inputs: [
@@ -753,10 +753,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 23,
+      deployedOnBlock: 42,
     },
     Lending: {
-      address: "0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE",
+      address: "0x84eA74d481Ee0A5332c457a4d796187F6Ba67fEB",
       abi: [
         {
           inputs: [
@@ -782,6 +782,11 @@ const deployedContracts = {
         {
           inputs: [],
           name: "Lending__TransferFailed",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "Lending__UnsafePositionRatio",
           type: "error",
         },
         {
@@ -1136,10 +1141,10 @@ const deployedContracts = {
         renounceOwnership: "@openzeppelin/contracts/access/Ownable.sol",
         transferOwnership: "@openzeppelin/contracts/access/Ownable.sol",
       },
-      deployedOnBlock: 25,
+      deployedOnBlock: 44,
     },
     MovePrice: {
-      address: "0x68B1D87F95878fE05B998F19b66F4baba5De1aed",
+      address: "0x9E545E3C0baAB3E08CdfD552C960A1050f373042",
       abi: [
         {
           inputs: [
@@ -1180,7 +1185,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 27,
+      deployedOnBlock: 46,
     },
   },
 } as const;
