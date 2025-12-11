@@ -13,6 +13,7 @@ error Lending__RepayingFailed();
 error Lending__PositionSafe();
 error Lending__NotLiquidatable();
 error Lending__InsufficientLiquidatorCorn();
+error Lending__InsufficientFundsOrAllowance();
 
 contract Lending is Ownable {
     uint256 private constant COLLATERAL_RATIO = 120; // 120% collateralization required
@@ -139,8 +140,8 @@ contract Lending is Ownable {
         if (repayAmount == 0 || repayAmount > s_userBorrowed[msg.sender]) {
             revert  Lending__InvalidAmount();
         }
-        if(i_corn.balanceOf(msg.sender) >= repayAmount && i_corn.allowance(msg.sender, address(this)) >= repayAmount) {
-            revert Lending__RepayingFailed();
+        if(i_corn.balanceOf(msg.sender) < repayAmount || i_corn.allowance(msg.sender, address(this)) < repayAmount) {
+            revert Lending__InsufficientFundsOrAllowance();
         }
 
         s_userBorrowed[msg.sender] -= repayAmount;
@@ -148,7 +149,7 @@ contract Lending is Ownable {
         if(!success) {
             revert Lending__RepayingFailed();
         }
-        
+
         emit AssetRepaid(msg.sender, repayAmount, i_cornDEX.currentPrice());
     }
 
@@ -158,5 +159,33 @@ contract Lending is Ownable {
      * @dev The caller must have enough CORN to pay back user's debt
      * @dev The caller must have approved this contract to transfer the debt
      */
-    function liquidate(address user) public {}
+    function liquidate(address user) public {
+        if(!isLiquidatable(user)) {
+            revert Lending__NotLiquidatable();
+        }
+        uint256 userDebt  = s_userBorrowed[user];
+        if(i_corn.balanceOf(msg.sender) < userDebt || i_corn.allowance(msg.sender, address(this)) < userDebt) {
+            revert Lending__InsufficientLiquidatorCorn();
+        }
+
+        s_userBorrowed[user] = 0;
+        uint256 liquidatorIncentive = userDebt * LIQUIDATOR_REWARD / 100;
+        uint256 totalToTransfer = userDebt + liquidatorIncentive;
+        if(totalToTransfer > s_userCollateral[user] * i_cornDEX.currentPrice() / 1e18) {
+            totalToTransfer = s_userCollateral[user] * i_cornDEX.currentPrice() / 1e18;
+        }
+        uint256 totalEthToTransfer = (totalToTransfer * 1e18) / i_cornDEX.currentPrice();
+        s_userCollateral[user] -= totalEthToTransfer;
+
+        bool success = i_corn.transferFrom(msg.sender,  address(this), userDebt);
+        if(!success) {
+            revert Lending__RepayingFailed();
+        }
+
+        (bool sent, ) = msg.sender.call{value: totalEthToTransfer}("");
+        if(!sent) {
+            revert Lending__TransferFailed();
+        }
+        emit Liquidation(user, msg.sender, totalEthToTransfer, userDebt, i_cornDEX.currentPrice());
+    }
 }
