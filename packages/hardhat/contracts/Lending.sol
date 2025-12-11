@@ -15,6 +15,12 @@ error Lending__NotLiquidatable();
 error Lending__InsufficientLiquidatorCorn();
 error Lending__InsufficientFundsOrAllowance();
 
+/**
+ * @title A simple over-collateralized lending protocol
+ * @author Rahul Dindigala
+ * @notice This contract allows users to deposit ETH as collateral and borrow CORN tokens (ERC20) against it.
+ *         Users must maintain a minimum collateralization ratio to avoid liquidation.
+ */
 contract Lending is Ownable {
     uint256 private constant COLLATERAL_RATIO = 120; // 120% collateralization required
     uint256 private constant LIQUIDATOR_REWARD = 10; // 10% reward for liquidators
