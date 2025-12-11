@@ -45,13 +45,31 @@ contract Lending is Ownable {
     /**
      * @notice Allows users to add collateral to their account
      */
-    function addCollateral() public payable {}
+    function addCollateral() public payable {
+        if(msg.value == 0) {
+            revert Lending__InvalidAmount();
+        }
+        s_userCollateral[msg.sender] += msg.value;
+        // uint256 collateralPrice = i_cornDEX.price(msg.value, address(this).balance - msg.value, i_corn.balanceOf(address(i_cornDEX)));
+        emit CollateralAdded(msg.sender, msg.value, i_cornDEX.currentPrice());
+    }
 
     /**
      * @notice Allows users to withdraw collateral as long as it doesn't make them liquidatable
      * @param amount The amount of collateral to withdraw
      */
-    function withdrawCollateral(uint256 amount) public {}
+    function withdrawCollateral(uint256 amount) public {
+        if(amount ==  0 || amount > s_userCollateral[msg.sender]) {
+            revert Lending__InvalidAmount();
+        }
+        s_userCollateral[msg.sender] -= amount;
+        //_validatePosition(msg.sender);
+        (bool sent, ) = msg.sender.call{value: amount}("");
+        if(!sent) {
+            revert Lending__TransferFailed();
+        }
+        emit CollateralWithdrawn(msg.sender, amount, i_cornDEX.currentPrice());
+    }
 
     /**
      * @notice Calculates the total collateral value for a user based on their collateral balance
